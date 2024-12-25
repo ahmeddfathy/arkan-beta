@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+    display: none;
+}
+
+
+.container {
+    margin-top: 20px;
+}
+
+h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.table {
+    background-color: #f8f9fa;
+}
+
+.table th, .table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table-striped tbody tr:nth-child(odd) {
+    background-color: #f2f2f2;
+}
+
+.btn-primary, .btn-warning, .btn-danger, .btn-success {
+    margin-top: 10px;
+}
+
+.alert {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.form-label {
+    font-weight: bold;
+}
+
+.form-select {
+    border-radius: 5px;
+}
+
+.form-control {
+    border-radius: 5px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}

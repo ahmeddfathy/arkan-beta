@@ -1,0 +1,174 @@
+/* Main Layout Styles */
+.container {
+    max-width: 100% !important; /* Changed from 1200px to 100% */
+    margin: 0;
+    padding: 20px;
+    width: 100%;
+}
+
+/* Card Styles */
+
+
+/* Table Container Styles */
+.table-responsive {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: auto;
+}
+/* Main table styles */
+.table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 1.5rem;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Header styles */
+.table thead th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    padding: 1rem;
+    border-bottom: 2px solid #dee2e6;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+}
+
+/* Cell styles */
+.table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf2f7;
+}
+
+/* Row hover effect */
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+/* Status badge styles */
+.badge {
+    padding: 0.5em 1em;
+    border-radius: 30px;
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: capitalize;
+    letter-spacing: 0.5px;
+}
+
+.bg-warning {
+    background-color: #ffd43b !important;
+    color: #000;
+}
+
+.bg-success {
+    background-color: #40c057 !important;
+    color: #fff;
+}
+
+/* Action buttons */
+.btn {
+    padding: 0.375rem 0.75rem;
+    border-radius: 6px;
+    margin: 0 0.25rem;
+}
+
+.btn-primary {
+    background-color: #228be6;
+    border-color: #228be6;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #fa5252;
+    border-color: #fa5252;
+    color: white;
+}
+
+/* Zebra striping for better readability */
+.table tbody tr:nth-of-type(odd) {
+    background-color: #fafbfc;
+}
+
+/* First and last cell rounded corners */
+.table thead th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.table thead th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 8px;
+}
+
+.table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 8px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .table thead th,
+    .table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .badge {
+        padding: 0.35em 0.65em;
+    }
+}
+
+
+.modal-content {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #70C8E8, #5AB1D9);
+    border-radius: 1rem 1rem 0 0;
+    padding: 1.5rem;
+}
+
+.modal-header .modal-title {
+    color: white;
+    font-weight: 500;
+}
+
+.modal-header .btn-close {
+    color: white;
+    opacity: 1;
+}
+
+.form-label {
+    color: #333333;
+    font-weight: 500;
+}
+
+.form-control:focus {
+    border-color: #70C8E8;
+    box-shadow: 0 0 0 0.2rem rgba(112, 200, 232, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #70C8E8, #5AB1D9);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5AB1D9, #4597BF);
+}
+
+.btn-light {
+    background: #F8FBFD;
+    border: 1px solid #E9EEF2;
+}
+

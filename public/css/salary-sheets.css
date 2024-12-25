@@ -1,0 +1,202 @@
+/* Main Layout */
+.min-h-screen {
+    background: linear-gradient(to bottom, rgba(240, 249, 255, 0.5), #ffffff);
+    min-height: 60vh !important;
+    width: 100% !important;
+}
+
+* {
+    font-size: 22px !important;
+}
+
+.container {
+    max-width: 100% !important; /* Changed from 1200px to 100% */
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    width: 100% !important;
+}
+
+/* Table Styles */
+.overflow-x-auto {
+    overflow-x: auto;
+    width: 100% !important;
+}
+
+table {
+    width: 100% !important;
+    min-width: 100% !important;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* Upload Section */
+.bg-white {
+    background-color: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 100% !important;
+}
+
+#dropzone {
+    border: 2px dashed rgba(73, 179, 255, 0.4);
+    border-radius: 0.75rem;
+    padding: 2.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    width: 100% !important;
+}
+
+#dropzone:hover {
+    border-color: #49B3FF;
+    background-color: rgba(73, 179, 255, 0.05);
+}
+
+/* Upload Icon Circle */
+.w-16 {
+    width: 4rem;
+    height: 4rem;
+    background-color: rgba(73, 179, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.fa-cloud-upload-alt {
+    color: #49B3FF;
+    font-size: 1.875rem;
+}
+
+/* Upload Text and Button */
+#dropzone p.text-lg {
+    color: #374151;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+#dropzone p.text-sm {
+    color: #6b7280;
+}
+
+#dropzone button {
+    background-color: #49B3FF;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    border: none;
+    cursor: pointer;
+    margin: 1rem 0;
+}
+
+#dropzone button:hover {
+    background-color: #3291d4;
+}
+
+/* Progress Bar */
+#uploadProgress {
+    margin-top: 1.5rem;
+}
+
+#uploadProgress .bg-gray-200 {
+    background-color: #e5e7eb;
+    border-radius: 9999px;
+    height: 0.5rem;
+}
+
+#uploadProgress .bg {
+    background-color: #49B3FF;
+    height: 0.5rem;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+/* Table Styles */
+.overflow-x-auto {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+thead {
+    background-color: #f9fafb;
+}
+
+th {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: #6b7280;
+    letter-spacing: 0.05em;
+}
+
+td {
+    padding: 1rem 1.5rem;
+    color: #1f2937;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Links in table */
+td a {
+    color: #49B3FF;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+td a:hover {
+    color: #3291d4;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    #dropzone {
+        padding: 1.5rem;
+    }
+
+    th, td {
+        padding: 0.75rem 1rem;
+    }
+
+    .mb-8 h1 {
+        font-size: 1.875rem;
+    }
+}
+
+/* File Input */
+#fileInput {
+    display: none;
+}
+
+/* Dividers */
+.divide-y > * + * {
+    border-top: 1px solid #e5e7eb;
+}
+
+/* Animations */
+@keyframes progress {
+    from { width: 0; }
+    to { width: 100%; }
+}
