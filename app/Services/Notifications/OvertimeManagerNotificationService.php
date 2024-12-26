@@ -12,11 +12,11 @@ class OvertimeManagerNotificationService
     public function notifyAboutNewRequest(OverTimeRequests $request): void
     {
         $overtimeDate = Carbon::parse($request->overtime_date);
-        
+
         User::where('role', 'manager')->each(function ($manager) use ($request, $overtimeDate) {
             Notification::create([
                 'user_id' => $manager->id,
-                'type' => 'new_overtime_request',
+                'type' => 'overtime-requests',
                 'data' => [
                     'message' => "{$request->user->name} has submitted an overtime request",
                     'request_id' => $request->id,
@@ -30,11 +30,11 @@ class OvertimeManagerNotificationService
     public function notifyAboutModification(OverTimeRequests $request): void
     {
         $overtimeDate = Carbon::parse($request->overtime_date);
-        
+
         User::where('role', 'manager')->each(function ($manager) use ($request, $overtimeDate) {
             Notification::create([
                 'user_id' => $manager->id,
-                'type' => 'overtime_request_modified',
+                'type' => 'overtime-requests',
                 'data' => [
                     'message' => "{$request->user->name} has modified their overtime request",
                     'request_id' => $request->id,
@@ -50,7 +50,7 @@ class OvertimeManagerNotificationService
         User::where('role', 'manager')->each(function ($manager) use ($request) {
             Notification::create([
                 'user_id' => $manager->id,
-                'type' => 'overtime_request_deleted',
+                'type' => 'overtime-requests',
                 'data' => [
                     'message' => "{$request->user->name} has deleted their overtime request",
                     'request_id' => $request->id,

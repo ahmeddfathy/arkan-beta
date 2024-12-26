@@ -23,7 +23,7 @@ class NotificationPermissionService
     public function createPermissionRequestNotification(PermissionRequest $request): void
     {
         $message = "{$request->user->name} has submitted a permission request";
-        $this->managerNotificationService->notifyAllManagers($request, 'new_permission_request', $message);
+        $this->managerNotificationService->notifyAllManagers($request, 'permission-requests', $message);
     }
 
     public function notifyPermissionModified(PermissionRequest $request): void
@@ -31,13 +31,13 @@ class NotificationPermissionService
         $this->employeeNotificationService->deleteExistingNotifications($request, 'permission_request_modified');
 
         $message = "{$request->user->name} has modified their permission request";
-        $this->managerNotificationService->notifyAllManagers($request, 'permission_request_modified', $message);
+        $this->managerNotificationService->notifyAllManagers($request, 'permission-requests', $message);
     }
 
     public function notifyPermissionDeleted(PermissionRequest $request): void
     {
         $message = "{$request->user->name} has deleted their permission request";
-        $this->managerNotificationService->notifyAllManagers($request, 'permission_request_deleted', $message);
+        $this->managerNotificationService->notifyAllManagers($request, 'permission-requests', $message);
     }
 
     // Manager Actions Notifications
@@ -52,7 +52,7 @@ class NotificationPermissionService
             'rejection_reason' => $request->rejection_reason,
         ];
 
-        $this->employeeNotificationService->notifyEmployee($request, 'permission_request_status_update', $data);
+        $this->employeeNotificationService->notifyEmployee($request, 'permission-requests', $data);
     }
 
     public function notifyManagerResponseModified(PermissionRequest $request): void
@@ -64,7 +64,7 @@ class NotificationPermissionService
             'rejection_reason' => $request->rejection_reason,
         ];
 
-        $this->employeeNotificationService->notifyEmployee($request, 'manager_response_modified', $data);
+        $this->employeeNotificationService->notifyEmployee($request, 'permission-requests', $data);
     }
 
     public function notifyManagerResponseDeleted(PermissionRequest $request): void
@@ -74,7 +74,6 @@ class NotificationPermissionService
             'request_id' => $request->id
         ];
 
-        $this->employeeNotificationService->notifyEmployee($request, 'manager_response_deleted', $data);
+        $this->employeeNotificationService->notifyEmployee($request, 'permission-requests', $data);
     }
 }
-

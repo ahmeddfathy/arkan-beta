@@ -32,64 +32,92 @@ class DashboardController extends Controller
             'max_delay_minutes' => 0
         ];
 
-        // إذا كان المستخدم موظف، نقوم بحساب الإحصائيات
-        if ($user && $user->employee_id) {
-            // تحديد فترة آخر 3 شهور
-            $startDate = now()->subMonths(2)->startOfMonth(); // م������ بداية الشهر قبل الماضي
-            $endDate = now()->endOfMonth(); // حتى نهاية الشهر الحالي
+        // إحصائيات الشهر للجميع (موظف أو مدير)
+        $startDate = now()->startOfMonth();
+        $endDate = now()->endOfMonth();
 
-            $statsQuery = AttendanceRecord::where('employee_id', $user->employee_id)
-                ->whereBetween('attendance_date', [$startDate, $endDate]);
+        // Add period information
+        $attendanceStats['period'] = [
+            'month' => now()->translatedFormat('F'),
+            'year' => now()->year
+        ];
 
-            // حساب أيام الحضور
-            $attendanceStats['present_days'] = (clone $statsQuery)
-                ->where('status', 'حضـور')
-                ->whereNotNull('entry_time')
-                ->count();
+        // Get salary files for the user
+        $salaryFiles = SalarySheet::where('employee_id', $user->employee_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-            // حساب أيام الغياب
-            $attendanceStats['absent_days'] = (clone $statsQuery)
-                ->where('status', 'غيــاب')
-                ->count();
+        $statsQuery = AttendanceRecord::where('employee_id', $user->employee_id)
+            ->whereBetween('attendance_date', [$startDate, $endDate]);
 
-            // حساب المخالفات
-            $attendanceStats['violation_days'] = (clone $statsQuery)
-                ->where('penalty', '>', 0)
-                ->count();
+        // حساب أجمالي أيام العمل (فقط أيام الحضور والغياب)
+        $totalWorkDays = (clone $statsQuery)
+            ->where(function ($query) {
+                $query->where('status', 'حضـور')
+                    ->orWhere('status', 'غيــاب');
+            })
+            ->count();
 
-            // حساب التأخير
-            $lateRecords = (clone $statsQuery)
-                ->where('delay_minutes', '>', 0)
-                ->whereNotNull('entry_time')
-                ->get();
+        // حساب أيام الحضور
+        $attendanceStats['present_days'] = (clone $statsQuery)
+            ->where('status', 'حضـور')
+            ->whereNotNull('entry_time')
+            ->count();
 
-            $attendanceStats['late_days'] = $lateRecords->count();
-            $attendanceStats['total_delay_minutes'] = $lateRecords->sum('delay_minutes');
-            $attendanceStats['avg_delay_minutes'] = $lateRecords->count() > 0
-                ? round($lateRecords->average('delay_minutes'), 1)
-                : 0;
-            $attendanceStats['max_delay_minutes'] = $lateRecords->max('delay_minutes') ?? 0;
+        // إضافة إجمالي أيام العمل للإحصائيات
+        $attendanceStats['total_work_days'] = $totalWorkDays;
 
-            // إضافة معلومات الفترة الزمنية
-            $attendanceStats['period'] = [
-                'start' => $startDate->translatedFormat('F Y'),
-                'end' => $endDate->translatedFormat('F Y')
+        // حساب أيام الغياب
+        $attendanceStats['absent_days'] = (clone $statsQuery)
+            ->where('status', 'غيــاب')
+            ->count();
+
+        // حساب المخالفات
+        $attendanceStats['violation_days'] = (clone $statsQuery)
+            ->where('penalty', '>', 0)
+            ->count();
+
+        // حساب التأخير
+        $lateRecords = (clone $statsQuery)
+            ->where('delay_minutes', '>', 0)
+            ->whereNotNull('entry_time')
+            ->get();
+
+        $attendanceStats['late_days'] = $lateRecords->count();
+        $attendanceStats['total_delay_minutes'] = $lateRecords->sum('delay_minutes');
+        $attendanceStats['avg_delay_minutes'] = $lateRecords->count() > 0
+            ? round($lateRecords->average('delay_minutes'), 1)
+            : 0;
+        $attendanceStats['max_delay_minutes'] = $lateRecords->max('delay_minutes') ?? 0;
+
+        if ($user->role === 'manager') {
+            // إحصائيات اليوم للمدير
+            $todayStats = [
+                'totalEmployees' => User::where('role', 'employee')->count(),
+                'presentToday' => AttendanceRecord::whereDate('attendance_date', Carbon::today())
+                    ->where('status', 'حضـور')
+                    ->count(),
+                'absentToday' => AttendanceRecord::whereDate('attendance_date', Carbon::today())
+                    ->where('status', 'غيــاب')
+                    ->count(),
+                'lateToday' => AttendanceRecord::whereDate('attendance_date', Carbon::today())
+                    ->where('delay_minutes', '>', 0)
+                    ->count()
             ];
+
+            // طلبات اليوم
+            $todayRequests = [
+                'absenceRequests' => AbsenceRequest::whereDate('absence_date', Carbon::today())->count(),
+                'permissionRequests' => PermissionRequest::whereDate('created_at', Carbon::today())->count(),
+                'overtimeRequests' => OverTimeRequests::whereDate('overtime_date', Carbon::today())->count(),
+                'violations' => Violation::whereDate('created_at', Carbon::today())->count()
+            ];
+
+            return view('dashboard', compact('todayStats', 'todayRequests', 'attendanceStats'));
         }
 
-        // Get today's statistics
-        $todayAbsenceRequests = AbsenceRequest::whereDate('absence_date', Carbon::today())->count();
-        $todayPermissionRequests = PermissionRequest::whereDate('created_at', Carbon::today())->count();
-        $todayOvertimeRequests = OverTimeRequests::whereDate('overtime_date', Carbon::today())->count();
-        $todayViolations = Violation::whereDate('created_at', Carbon::today())->count();
-
-        return view('dashboard', compact(
-            'attendanceStats',
-            'todayAbsenceRequests',
-            'todayPermissionRequests',
-            'todayOvertimeRequests',
-            'todayViolations'
-        ));
+        // في حالة الموظف العادي
+        return view('profile.dashboard-user', compact('attendanceStats', 'salaryFiles'));
     }
 
     public function previewAttendance($employee_id, AttendanceReportService $reportService)
@@ -126,11 +154,22 @@ class DashboardController extends Controller
             $statsQuery->where('status', $status);
         }
 
+        // حساب أجمالي أيام العمل (فقط أيام الحضور والغياب)
+        $totalWorkDays = (clone $statsQuery)
+            ->where(function ($query) {
+                $query->where('status', 'حضـور')
+                    ->orWhere('status', 'غيــاب');
+            })
+            ->count();
+
         // حساب أيام الحضور
         $attendanceStats['present_days'] = (clone $statsQuery)
             ->where('status', 'حضـور')
             ->whereNotNull('entry_time')
             ->count();
+
+        // حضافة إجمالي أيام العمل للإحصائيات
+        $attendanceStats['total_work_days'] = $totalWorkDays;
 
         // حساب أيام الغياب
         $attendanceStats['absent_days'] = (clone $statsQuery)
@@ -157,8 +196,8 @@ class DashboardController extends Controller
 
         // إضافة معلومات الفترة الزمنية
         $attendanceStats['period'] = [
-            'month' => $month ? Carbon::create()->month($month)->translatedFormat('F') : 'كل الش��ور',
-            'year' => $year ?: 'كل السنوات'
+            'month' => $month ? Carbon::create()->month($month)->translatedFormat('F') : 'كل الشهور',
+            'year' => $year ?: 'ل السنوات'
         ];
 
         return $reportService->previewAttendance($employee_id, $attendanceStats);

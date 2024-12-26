@@ -13,7 +13,7 @@ class NotificationService
         User::where('role', 'manager')->each(function ($manager) use ($request) {
             Notification::create([
                 'user_id' => $manager->id,
-                'type' => 'new_leave_request',
+                'type' => 'absence-requests',
                 'data' => [
                     'message' => "{$request->user->name} has submitted a leave request",
                     'request_id' => $request->id,
@@ -32,7 +32,7 @@ class NotificationService
         // Create new notification
         Notification::create([
             'user_id' => $request->user_id,
-            'type' => 'leave_request_status_update',
+            'type' => 'absence-requests',
             'data' => [
                 'message' => "Your leave request has been {$request->status}",
                 'request_id' => $request->id,
@@ -60,7 +60,7 @@ class NotificationService
         User::where('role', 'manager')->each(function ($manager) use ($request) {
             Notification::create([
                 'user_id' => $manager->id,
-                'type' => 'leave_request_modified',
+                'type' => 'absence-requests',
                 'data' => [
                     'message' => "{$request->user->name} has modified their leave request",
                     'request_id' => $request->id,
@@ -76,7 +76,7 @@ class NotificationService
         User::where('role', 'manager')->each(function ($manager) use ($request) {
             Notification::create([
                 'user_id' => $manager->id,
-                'type' => 'leave_request_deleted',
+                'type' => 'absence-requests',
                 'data' => [
                     'message' => "{$request->user->name} has deleted their leave request",
                     'request_id' => $request->id,

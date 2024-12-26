@@ -13,7 +13,7 @@ class OvertimeEmployeeNotificationService
 
         Notification::create([
             'user_id' => $request->user_id,
-            'type' => 'overtime_request_status_update',
+            'type' => 'overtime-requests',
             'data' => [
                 'message' => "Your overtime request has been {$request->status}",
                 'request_id' => $request->id,
@@ -28,13 +28,13 @@ class OvertimeEmployeeNotificationService
     {
         $this->deleteExistingStatusNotifications($request);
 
-        
+
     }
 
     public function deleteExistingStatusNotifications(OverTimeRequests $request): void
     {
         Notification::where('related_id', $request->id)
-            ->where('type', 'overtime_request_status_update')
+            ->where('type', 'overtime-requests')
             ->delete();
     }
 }

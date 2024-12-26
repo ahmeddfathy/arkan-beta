@@ -16,7 +16,7 @@ class NotificationOvertimeService
         User::where('role', 'manager')->each(function ($manager) use ($request, $overtimeDate) {
             Notification::create([
                 'user_id' => $manager->id,
-                'type' => 'new_overtime_request',
+                'type' => 'overtime-requests',
                 'data' => [
                     'message' => "{$request->user->name} has submitted an overtime request",
                     'request_id' => $request->id,
@@ -35,7 +35,7 @@ class NotificationOvertimeService
         // Create new notification
         Notification::create([
             'user_id' => $request->user_id,
-            'type' => 'overtime_request_status_update',
+            'type' => 'overtime-requests',
             'data' => [
                 'message' => "Your overtime request has been {$request->status}",
                 'request_id' => $request->id,
