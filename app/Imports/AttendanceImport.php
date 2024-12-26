@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Imports;
 
 use App\Models\AttendanceRecord;
@@ -10,28 +11,35 @@ class AttendanceImport implements ToModel
 {
     public function model(array $row)
     {
-        if (empty($row[1]) || empty($row[2]) || empty($row[6])) {
+        // تخطي الصف إذا كان فارغاً تماماً
+        if (empty($row[1])) {
             return null;
         }
 
         // Extract only the employee number from "name[number]" format
         $employeeNumber = $this->extractNumber($row[1]);
 
-
         // Format attendance date
-
         $attendanceDate = $this->formatDate($row[2]);
-        
 
-        // Entry and exit times
-        $entryTime = $this->formatTime($row[7]);
-        $exitTime = $this->formatTime($row[8]);
+        // معالجة الحالة (status)
+        $status = $this->formatStatus($row[4]);
+
+        // معالجة أوقات الدخول والخروج
+        $entryTime = null;
+        $exitTime = null;
+
+        // إذا كانت الحالة حضور، نقوم بمعالجة الأوقات
+        if ($status === 'حضـور') {
+            $entryTime = $this->formatTime($row[7]);
+            $exitTime = $this->formatTime($row[8]);
+        }
 
         return new AttendanceRecord([
-            'employee_id'  => $employeeNumber ?? null,
-            'attendance_date'  => $attendanceDate ?? '2001-9-14',
+            'employee_id'  => $employeeNumber,
+            'attendance_date'  => $attendanceDate ?? now(),
             'day'              => $row[3] ?? null,
-            'status'           => $row[4] ?? null,
+            'status'           => $status,
             'shift'            => $row[5] ?? null,
             'shift_hours'      => isset($row[6]) ? (int)$row[6] : 0,
             'entry_time'       => $entryTime,
@@ -45,41 +53,41 @@ class AttendanceImport implements ToModel
         ]);
     }
 
-    // Helper to extract the number from "name[number]"
     private function extractNumber($string)
     {
         preg_match('/\[(\d+)\]/', $string, $matches);
-        return $matches[1] ?? null; // Return the number if found, otherwise null
+        return $matches[1] ?? null;
     }
 
-    // Helper to format date from Excel serial number
     private function formatDate($excelDate)
     {
+        if (empty($excelDate)) {
+            return now();
+        }
+
         // If the input is already in d/m/y format
         if (is_string($excelDate) && preg_match('/^\d{2}\/\d{2}\/\d{2}$/', $excelDate)) {
             try {
                 return Carbon::createFromFormat('d/m/y', $excelDate);
             } catch (\Exception $e) {
-                return null;
+                return now();
             }
         }
 
         // If the input is an Excel numeric date
-        if (!empty($excelDate) && is_numeric($excelDate)) {
+        if (is_numeric($excelDate)) {
             try {
                 return Carbon::instance(Date::excelToDateTimeObject($excelDate));
             } catch (\Exception $e) {
-                return null;
+                return now();
             }
         }
 
-        return null;
+        return now();
     }
 
-    // Helper to format time from Excel
     private function formatTime($timeString)
     {
-        // If empty, return null
         if (empty($timeString)) {
             return null;
         }
@@ -89,17 +97,12 @@ class AttendanceImport implements ToModel
             return date('H:i:s', strtotime($timeString));
         }
 
-        // For Excel time values (which are decimal numbers representing fractions of a day)
+        // For Excel time values
         if (is_numeric($timeString)) {
-            // Convert decimal hours to seconds
-            $totalSeconds = round($timeString * 86400); // 86400 seconds in a day
-
-            // Calculate hours, minutes, and seconds
+            $totalSeconds = round($timeString * 86400);
             $hours = floor($totalSeconds / 3600);
             $minutes = floor(($totalSeconds % 3600) / 60);
             $seconds = $totalSeconds % 60;
-
-            // Ensure hours don't exceed 24
             $hours = $hours % 24;
 
             return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
@@ -108,6 +111,46 @@ class AttendanceImport implements ToModel
         return null;
     }
 
-    // Helper to format time from Excel
+    private function formatStatus($status)
+    {
+        if (empty($status)) {
+            return 'غيــاب';
+        }
 
+        // تنظيف النص من المسافات الزائدة
+        $status = trim($status);
+
+        // قائمة الحالات المقبولة مع معالجة الحالات المختلفة للعطلة الأسبوعية
+        $statusMap = [
+            'حضـور' => 'حضـور',
+            'حضور' => 'حضـور',
+            'غيــاب' => 'غيــاب',
+            'غياب' => 'غيــاب',
+            'عطلة اسبوعية' => 'عطلة اسبوعية',
+            'عطلة أسبوعية' => 'عطلة اسبوعية',
+            'عطله اسبوعيه' => 'عطلة اسبوعية',
+            'عطلة' => 'عطلة اسبوعية',
+            'اجازة رسمية' => 'اجازة رسمية',
+            'إجازة رسمية' => 'اجازة رسمية',
+            'مأمورية' => 'مأمورية',
+            'مامورية' => 'مأمورية',
+            'اذن' => 'اذن',
+            'إذن' => 'اذن'
+        ];
+
+        // البحث عن الحالة في القائمة
+        foreach ($statusMap as $key => $value) {
+            if (strcasecmp($status, $key) === 0) {
+                return $value;
+            }
+        }
+
+        // التحقق من إذا كان النص يحتوي على "عطلة" أو "عطله"
+        if (preg_match('/(عطلة|عطله)/i', $status)) {
+            return 'عطلة اسبوعية';
+        }
+
+        // إذا كانت الحالة غير معروفة
+        return 'غيــاب';
+    }
 }

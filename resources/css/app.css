@@ -6,7 +6,6 @@
     display: none;
 }
 
-
 .container {
     margin-top: 20px;
 }
@@ -18,10 +17,15 @@ h1 {
 }
 
 .table {
-    background-color: #f8f9fa;
+    background-color: #f8f9fa !important;
 }
 
-.table th, .table td {
+.table-solid {
+    opacity: 1 !important;
+}
+
+.table th,
+.table td {
     text-align: center;
     vertical-align: middle;
 }
@@ -30,7 +34,10 @@ h1 {
     background-color: #f2f2f2;
 }
 
-.btn-primary, .btn-warning, .btn-danger, .btn-success {
+.btn-primary,
+.btn-warning,
+.btn-danger,
+.btn-success {
     margin-top: 10px;
 }
 

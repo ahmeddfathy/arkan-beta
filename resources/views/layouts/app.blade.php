@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,41 +18,43 @@
     @stack('styles')
     @livewireStyles
 </head>
-<body class="d-flex flex-column min-vh-100">
-<div>
 
-</div>
-@livewire('navigation-menu')
-    <div class="wrapper flex-grow-1 d-flex flex-column" >
-    @if(session('success'))
+<body class="d-flex flex-column min-vh-100">
+    <div>
+
+    </div>
+    <!-- @livewire('navigation-menu') -->
+     @include('layouts.navigation')
+    <div class="wrapper flex-grow-1 d-flex flex-column">
+        @if(session('success'))
         <script>
             toastr.success("{{ session('success') }}");
         </script>
-    @endif
-    @if($errors->any())
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <div class="d-flex">
-            <div class="me-2">
-                <i class="fas fa-exclamation-circle fa-lg"></i>
+        @endif
+        @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="d-flex">
+                <div class="me-2">
+                    <i class="fas fa-exclamation-circle fa-lg"></i>
+                </div>
+                <div>
+                    <ul class="mb-0 ps-0" style="list-style: none;">
+                        @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
-            <div>
-                <ul class="mb-0 ps-0" style="list-style: none;">
-                    @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
+        @endif
 
 
-    @if (session('error'))
-    <div class="alert alert-danger">
-        {{ session('error') }}
-    </div>
-@endif
+        @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+        @endif
 
 
         <main class="flex-grow-1 py-4">
@@ -71,16 +74,16 @@
 
     <script src="{{ asset('js/app.js' ) }}"></script>
     <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-        <!-- Styles -->
-        @livewireStyles
+    <!-- Styles -->
+    @livewireStyles
     <script>
         AOS.init({
             duration: 1000,
@@ -92,41 +95,42 @@
 
 
 
-@push('styles')
-<style>
-.notification-item {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    transition: background-color 0.3s;
-}
+    @push('styles')
+    <style>
+        .notification-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s;
+        }
 
-.notification-item:hover {
-    background-color: #f8f9fa;
-}
+        .notification-item:hover {
+            background-color: #f8f9fa;
+        }
 
-.notification-item.unread {
-    background-color: #f0f7ff;
-}
+        .notification-item.unread {
+            background-color: #f0f7ff;
+        }
 
-.notification-content {
-    margin-bottom: 5px;
-}
+        .notification-content {
+            margin-bottom: 5px;
+        }
 
-.notification-time {
-    font-size: 0.8rem;
-    color: #6c757d;
-}
+        .notification-time {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
 
-.dropdown-menu {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-</style>
-@endpush
+        .dropdown-menu {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+    @endpush
 
 
     @stack('scripts')
     @stack('modals')
 
-        @livewireScripts
+    @livewireScripts
 </body>
+
 </html>

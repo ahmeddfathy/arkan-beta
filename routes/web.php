@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\ExampleMail;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\OnlineStatusController;
+use App\Http\Controllers\AdminNotificationController;
 
 Route::get('/send-mail', function () {
     $data = [
@@ -57,7 +58,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/absence-requests/{absenceRequest}/status', [AbsenceRequestController::class, 'updateStatus'])
         ->name('absence-requests.updateStatus');
-
 });
 
 // Manager routes
@@ -92,11 +92,14 @@ Route::middleware(['auth', 'role:manager'])->group(function () {
     Route::get('/attendance', [AttendanceRecordController::class, 'index'])->name('attendance.index');
     Route::post('/attendance/import', [AttendanceRecordController::class, 'import'])->name('attendance.import');
 
-Route::resource('users', UserController::class);
-Route::post('user/import', [UserController::class, 'import'])->name('user.import');;
-Route::resource('/attendances', AttendanceController::class);
-Route::resource('/leaves', LeaveController::class);
+    Route::resource('users', UserController::class);
+    Route::post('user/import', [UserController::class, 'import'])->name('user.import');;
+    Route::resource('/attendances', AttendanceController::class);
+    Route::resource('/leaves', LeaveController::class);
 
+    Route::resource('admin/notifications', AdminNotificationController::class, [
+        'as' => 'admin'
+    ]);
 });
 
 // Shared routes (Manager & Employee)
@@ -112,21 +115,26 @@ Route::middleware(['auth', 'role:manager,employee'])->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
     Route::get('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])
         ->name('notifications.mark-as-read');
+
+    Route::get('/user/{employee_id}/attendance-preview', [DashboardController::class, 'previewAttendance'])
+        ->name('user.previewAttendance');
+
+
     Route::get('/user/{employee_id}/attendance-report', [DashboardController::class, 'generateAttendancePDF'])
         ->name('user.downloadAttendanceReport');
 
 
-        Route::get('/salary-sheet/{userId}/{month}/{filename}', function ($employee_id, $month, $filename) {
-            $user = Auth::user();
-            if ($user->employee_id != $employee_id && $user->role != 'manager') {
-                abort(403, 'Unauthorized access');
-            }
-            $filePath = storage_path("app/private/salary_sheets/{$employee_id}/{$month}/{$filename}");
-            if (!file_exists($filePath)) {
-                abort(404, 'File not found');
-            }
-            return response()->file($filePath);
-        })->middleware('auth');
+    Route::get('/salary-sheet/{userId}/{month}/{filename}', function ($employee_id, $month, $filename) {
+        $user = Auth::user();
+        if ($user->employee_id != $employee_id && $user->role != 'manager') {
+            abort(403, 'Unauthorized access');
+        }
+        $filePath = storage_path("app/private/salary_sheets/{$employee_id}/{$month}/{$filename}");
+        if (!file_exists($filePath)) {
+            abort(404, 'File not found');
+        }
+        return response()->file($filePath);
+    })->middleware('auth');
 
 
 
@@ -140,3 +148,23 @@ Route::middleware(['auth', 'role:manager,employee'])->group(function () {
 });
 Route::get('/salary-sheets', [SalarySheetController::class, 'index'])->name('salary-sheets.index');
 Route::post('/salary-sheets/upload', [SalarySheetController::class, 'upload'])->name('salary-sheets.upload');
+
+// إضافة راوت جديد لتصدير PDF
+Route::get('/attendance/{employee_id}/pdf', [DashboardController::class, 'generateAttendancePDF'])
+    ->name('attendance.pdf')
+    ->middleware(['auth', 'role:manager']);
+
+// مسارات الحضور والانصراف
+Route::middleware(['auth'])->group(function () {
+    // عرض سجلات الحضور
+    Route::get('/attendance/records', [AttendanceRecordController::class, 'index'])
+        ->name('attendance.index');
+
+    // استيراد سجلات الحضور
+    Route::post('/attendance/import', [AttendanceRecordController::class, 'import'])
+        ->name('attendance.import');
+
+    // عرض تفاصيل حضور موظف معين
+    Route::get('/attendance/preview/{employee_id}', [DashboardController::class, 'previewAttendance'])
+        ->name('attendance.preview');
+});

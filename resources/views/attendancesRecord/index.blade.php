@@ -172,7 +172,7 @@
                         <td>{{ \Carbon\Carbon::parse($record->attendance_date)->format('Y-m-d') }}</td>
                         <td>{{ $record->day }}</td>
                         <td>
-                            <span class="badge {{ str_contains($record->status, 'حضور') ? 'badge-success' : 'badge-danger' }}">
+                            <span>
                                 {{ $record->status }}
                             </span>
                         </td>

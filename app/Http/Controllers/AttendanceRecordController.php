@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\AttendanceImport;
 use App\Models\AttendanceRecord;
 use App\Models\User;
+use Carbon\Carbon;
 
 class AttendanceRecordController extends Controller
 {
@@ -24,8 +25,8 @@ class AttendanceRecordController extends Controller
 
         // Get selected month and year (default to current month)
         $selectedMonth = $request->input('month', now()->format('Y-m'));
-        $startOfMonth = \Carbon\Carbon::parse($selectedMonth)->startOfMonth();
-        $endOfMonth = \Carbon\Carbon::parse($selectedMonth)->endOfMonth();
+        $startOfMonth = Carbon::parse($selectedMonth)->startOfMonth();
+        $endOfMonth = Carbon::parse($selectedMonth)->endOfMonth();
 
         // Apply employee filter if provided
         if ($request->has('employee_filter') && !empty($request->employee_filter)) {
@@ -40,33 +41,42 @@ class AttendanceRecordController extends Controller
             ->paginate(10)
             ->appends($request->except('page'));
 
-        // حساب إحصائيات الحضور والغياب
+        // تهيئة المتغير بقيم افتراضية
         $attendanceStats = [
             'present_days' => 0,
             'absent_days' => 0,
             'violation_days' => 0,
             'late_days' => 0,
-            'total_delay_minutes' => 0
+            'total_delay_minutes' => 0,
+            'avg_delay_minutes' => 0,
+            'max_delay_minutes' => 0
         ];
 
+        // حساب الإحصائيات إذا تم تحديد موظف
         if ($request->has('employee_filter') && !empty($request->employee_filter)) {
             $statsQuery = AttendanceRecord::where('employee_id', $request->employee_filter)
                 ->whereBetween('attendance_date', [$startOfMonth, $endOfMonth]);
 
+            // حساب أيام الحضور
             $attendanceStats['present_days'] = (clone $statsQuery)
-                ->where('status', 'like', '%حضور%')
+                ->where('status', 'حضـور')
+                ->whereNotNull('entry_time')
                 ->count();
 
+            // حساب أيام الغياب
             $attendanceStats['absent_days'] = (clone $statsQuery)
-                ->where('status', 'like', '%غياب%')
+                ->where('status', 'غيــاب')
                 ->count();
 
+            // حساب المخالفات
             $attendanceStats['violation_days'] = (clone $statsQuery)
                 ->where('penalty', '>', 0)
                 ->count();
 
+            // حساب التأخير
             $lateRecords = (clone $statsQuery)
                 ->where('delay_minutes', '>', 0)
+                ->whereNotNull('entry_time')
                 ->get();
 
             $attendanceStats['late_days'] = $lateRecords->count();
@@ -75,6 +85,12 @@ class AttendanceRecordController extends Controller
                 ? round($lateRecords->average('delay_minutes'), 1)
                 : 0;
             $attendanceStats['max_delay_minutes'] = $lateRecords->max('delay_minutes') ?? 0;
+
+            // حساب نسبة الحضور
+            $totalDays = $attendanceStats['present_days'] + $attendanceStats['absent_days'];
+            $attendanceStats['attendance_rate'] = $totalDays > 0
+                ? round(($attendanceStats['present_days'] / $totalDays) * 100, 1)
+                : 0;
         }
 
         // Get the selected employee name for displaying in input
@@ -93,11 +109,19 @@ class AttendanceRecordController extends Controller
         ));
     }
 
-
-
     public function import(Request $request)
     {
-        Excel::import(new AttendanceImport, $request->file('file'));
-        return redirect()->route('attendance.index')->with('success', 'Records imported successfully');
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        try {
+            Excel::import(new AttendanceImport, $request->file('file'));
+            return redirect()->route('attendance.index')
+                ->with('success', 'تم استيراد السجلات بنجاح');
+        } catch (\Exception $e) {
+            return redirect()->route('attendance.index')
+                ->with('error', 'حدث خطأ أثناء استيراد الملف: ' . $e->getMessage());
+        }
     }
 }

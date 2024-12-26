@@ -19,6 +19,9 @@
     margin: 2rem 0;
     animation: fadeIn 0.6s ease-out;
 }
+.card{
+    opacity: 1 !important;
+  }
 
 @keyframes fadeIn {
     from {

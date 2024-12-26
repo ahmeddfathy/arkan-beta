@@ -1,5 +1,12 @@
 @extends('layouts.app')
 
+<head>
+    <style>
+        .card {
+            opacity: 1 !important;
+        }
+    </style>
+</head>
 @section('content')
 <div class="container-fluid px-4">
     <!-- Header Section with Enhanced Design -->
@@ -17,53 +24,66 @@
             <div class="col-md-6">
                 <div class="d-flex justify-content-md-end mt-3 mt-md-0">
                     <!-- Filter Section -->
-                    <div class="filter-section bg-white p-3 rounded-3 shadow-sm mb-4">
-                        <form action="" method="GET" class="row g-3 align-items-end">
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted">الشهر</label>
-                                <select name="month" class="form-select custom-select">
-                                    <option value="">كل الشهور</option>
-                                    @foreach($months as $month)
-                                    <option value="{{ $month['value'] }}" {{ request('month') == $month['value'] ? 'selected' : '' }}>
-                                        {{ $month['label'] }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted">السنة</label>
-                                <select name="year" class="form-select custom-select">
-                                    @foreach($years as $year)
-                                    <option value="{{ $year['value'] }}" {{ (request('year', now()->year) == $year['value']) ? 'selected' : '' }}>
-                                        {{ $year['label'] }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted">الحالة</label>
-                                <select name="status" class="form-select custom-select">
-                                    <option value="all">جميع الحالات</option>
-                                    <option value="present" {{ request('status') == 'present' ? 'selected' : '' }}>حاضر</option>
-                                    <option value="absent" {{ request('status') == 'absent' ? 'selected' : '' }}>غائب</option>
-                                    <option value="late" {{ request('status') == 'late' ? 'selected' : '' }}>متأخر</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3 d-flex gap-2">
-                                <button type="submit" class="btn btn-primary flex-grow-1">
-                                    <i class="fas fa-filter me-1"></i>
-                                    تصفية
-                                </button>
-                                <a href="{{ request()->url() }}" class="btn btn-light">
-                                    <i class="fas fa-redo-alt"></i>
-                                </a>
-                            </div>
-                        </form>
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body">
+                            <form action="" method="GET" class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">الشهر</label>
+                                    <select name="month" class="form-select">
+                                        <option value="">كل الشهور</option>
+                                        @foreach(range(1, 12) as $monthNumber)
+                                        @php
+                                        $monthName = Carbon\Carbon::create()->month($monthNumber)->translatedFormat('F');
+                                        @endphp
+                                        <option value="{{ $monthNumber }}" {{ request('month') == $monthNumber ? 'selected' : '' }}>
+                                            {{ $monthName }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">السنة</label>
+                                    <select name="year" class="form-select">
+                                        <option value="">كل السنوات</option>
+                                        @foreach(range(now()->year - 2, now()->year) as $year)
+                                        <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
+                                            {{ $year }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">الحالة</label>
+                                    <select name="status" class="form-select">
+                                        <option value="">كل الحالات</option>
+                                        <option value="حضـور" {{ request('status') == 'حضـور' ? 'selected' : '' }}>حضور</option>
+                                        <option value="غيــاب" {{ request('status') == 'غيــاب' ? 'selected' : '' }}>غياب</option>
+                                        <option value="عطلة اسبوعية" {{ request('status') == 'عطلة اسبوعية' ? 'selected' : '' }}>عطلة أسبوعية</option>
+                                        <option value="اجازة رسمية" {{ request('status') == 'اجازة رسمية' ? 'selected' : '' }}>إجازة رسمية</option>
+                                        <option value="مأمورية" {{ request('status') == 'مأمورية' ? 'selected' : '' }}>مأمورية</option>
+
+                                    </select>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-filter me-1"></i>
+                                            تصفية
+                                        </button>
+                                        @if(request()->hasAny(['month', 'year', 'status']))
+                                        <a href="{{ route('attendance.preview', ['employee_id' => $user->employee_id]) }}" class="btn btn-light">
+                                            <i class="fas fa-times me-1"></i>
+                                            مسح الفلتر
+                                        </a>
+                                        @endif
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                    <a href="{{ route('attendance.pdf', ['employee_id' => $user->employee_id]) }}?{{ http_build_query(request()->all()) }}" class="btn btn-outline-primary rounded-pill btn-sm">
-                        <i class="fas fa-file-pdf ms-1"></i>
-                        تصدير PDF
-                    </a>
                 </div>
             </div>
         </div>
@@ -105,29 +125,44 @@
             <div class="row mb-4">
                 <div class="col-md-12">
                     <div class="alert alert-info">
-                        <h6 class="mb-2">إحصائيات شهر {{ $stats['month_name'] }} {{ $stats['year'] }}</h6>
+                        <h6 class="mb-2">
+                            إحصائيات
+                            {{ $attendanceStats['period']['month'] }}
+                            {{ $attendanceStats['period']['year'] }}
+                            @if(request('status'))
+                            - {{ request('status') }}
+                            @endif
+                        </h6>
                         <div class="row text-center g-3">
                             <div class="col-md-3">
                                 <div class="border-end">
-                                    <h4 class="mb-0">{{ $stats['working_days'] }}</h4>
+                                    <h4 class="mb-0">{{ $attendanceStats['present_days'] + $attendanceStats['absent_days'] }}</h4>
                                     <small>إجمالي أيام العمل</small>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="border-end">
-                                    <h4 class="mb-0">{{ $stats['present'] }}</h4>
+                                    <h4 class="mb-0">{{ $attendanceStats['present_days'] }}</h4>
                                     <small>أيام الحضور</small>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="border-end">
-                                    <h4 class="mb-0">{{ $stats['absent'] }}</h4>
+                                    <h4 class="mb-0">{{ $attendanceStats['absent_days'] }}</h4>
                                     <small>أيام الغياب</small>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div>
-                                    <h4 class="mb-0">{{ $stats['attendance_rate'] }}%</h4>
+                                    <h4 class="mb-0">
+                                        @php
+                                        $totalDays = $attendanceStats['present_days'] + $attendanceStats['absent_days'];
+                                        $attendanceRate = $totalDays > 0
+                                        ? round(($attendanceStats['present_days'] / $totalDays) * 100, 1)
+                                        : 0;
+                                        @endphp
+                                        {{ $attendanceRate }}%
+                                    </h4>
                                     <small>نسبة الحضور</small>
                                 </div>
                             </div>
@@ -169,8 +204,8 @@
                         </div>
                         <div class="stat-details">
                             <h6>أيام الحضور</h6>
-                            <h3>{{ $stats['present'] }}</h3>
-                            <small class="text-muted">من أصل {{ $stats['working_days'] }} يوم</small>
+                            <h3>{{ $attendanceStats['present_days'] }}</h3>
+                            <small class="text-muted">من أصل {{ $attendanceStats['present_days'] + $attendanceStats['absent_days'] }} يوم</small>
                         </div>
                     </div>
                 </div>
@@ -181,8 +216,8 @@
                         </div>
                         <div class="stat-details">
                             <h6>أيام الغياب</h6>
-                            <h3>{{ $stats['absent'] }}</h3>
-                            <small class="text-muted">من أصل {{ $stats['working_days'] }} يوم</small>
+                            <h3>{{ $attendanceStats['absent_days'] }}</h3>
+                            <small class="text-muted">من أصل {{ $attendanceStats['present_days'] + $attendanceStats['absent_days'] }} يوم</small>
                         </div>
                     </div>
                 </div>
@@ -193,20 +228,20 @@
                         </div>
                         <div class="stat-details">
                             <h6>مرات التأخير</h6>
-                            <h3>{{ $stats['late'] }}</h3>
-                            <small class="text-muted">{{ $stats['total_delay_hours'] }} ساعة تأخير</small>
+                            <h3>{{ $attendanceStats['late_days'] }}</h3>
+                            <small class="text-muted">{{ $attendanceStats['total_delay_minutes'] }} دقيقة تأخير</small>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stat-card border-0 shadow-hover">
                         <div class="stat-icon bg-info-subtle pulse-info">
-                            <i class="fas fa-sign-out-alt"></i>
+                            <i class="fas fa-exclamation-triangle"></i>
                         </div>
                         <div class="stat-details">
-                            <h6>الخروج المبكر</h6>
-                            <h3>{{ $stats['early_leave'] }}</h3>
-                            <small class="text-muted">{{ $stats['total_early_minutes'] }} دقيقة</small>
+                            <h6>المخالفات</h6>
+                            <h3>{{ $attendanceStats['violation_days'] }}</h3>
+                            <small class="text-muted">عدد أيام المخالفات</small>
                         </div>
                     </div>
                 </div>
@@ -229,7 +264,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                        <table class="table table-hover align-middle mt-5">
                             <thead>
                                 <tr>
                                     <th>التاريخ</th>
@@ -253,7 +288,7 @@
                                     <td>{{ $record->attendance_date }}</td>
                                     <td>{{ $record->day }}</td>
                                     <td>
-                                        <span class="status-badge {{ $record->status == 'حضور' ? 'success' : 'danger' }}">
+                                        <span>
                                             {{ $record->status }}
                                         </span>
                                     </td>
@@ -301,18 +336,12 @@
                                 @endforeach
                             </tbody>
                         </table>
-                    </div>
 
-                    <!-- Pagination -->
-                    @if($attendanceRecords->hasPages())
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <div class="text-muted">
-                            عرض {{ $attendanceRecords->firstItem() }} إلى {{ $attendanceRecords->lastItem() }}
-                            من أصل {{ $attendanceRecords->total() }} سجل
+                        <!-- إضافة Pagination -->
+                        <div class="d-flex justify-content-center py-3">
+                            {{ $attendanceRecords->links() }}
                         </div>
-                        {{ $attendanceRecords->links() }}
                     </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -409,7 +438,8 @@
 
     /* تنسيق الجدول */
     .table {
-        margin-bottom: 0;
+        margin-bottom: 100px !important;
+
     }
 
     .table thead th {
@@ -642,6 +672,53 @@
 
         .employee-info {
             justify-content: center;
+        }
+    }
+
+    /* تنسيق Pagination */
+    .pagination {
+        margin-bottom: 0;
+    }
+
+    .page-link {
+        padding: 0.5rem 0.75rem;
+        color: var(--primary-blue);
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+
+    .page-link:hover {
+        z-index: 2;
+        color: #0056b3;
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+    }
+
+    .page-item.active .page-link {
+        z-index: 3;
+        color: #fff;
+        background-color: var(--primary-blue);
+        border-color: var(--primary-blue);
+    }
+
+    .page-item.disabled .page-link {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+        border-color: #dee2e6;
+    }
+
+    /* تحسين مظهر Pagination على الشاشات الصغيرة */
+    @media (max-width: 768px) {
+        .pagination {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .page-link {
+            margin: 2px;
+            border-radius: 4px;
         }
     }
 </style>

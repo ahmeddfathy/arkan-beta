@@ -21,6 +21,9 @@
     overflow-x: auto;
     width: 100% !important;
 }
+.card{
+    opacity: 1 !important;
+  }
 
 table {
     width: 100% !important;
