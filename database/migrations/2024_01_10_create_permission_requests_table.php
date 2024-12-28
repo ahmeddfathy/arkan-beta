@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('reason');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->text('rejection_reason')->nullable();
+            $table->enum('leader_approval', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->text('leader_rejection_reason')->nullable();
             $table->timestamps();
         });
     }

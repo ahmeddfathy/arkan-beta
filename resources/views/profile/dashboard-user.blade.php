@@ -70,7 +70,10 @@
   <div class="dashboard-header">
     <h1 class="text-3xl font-bold mb-2">مرحباً، {{ Auth::user()->name }}</h1>
     <p class="text-white/80">
-      إحصائيات شهر {{ $attendanceStats['period']['month'] }} {{ $attendanceStats['period']['year'] }}
+      إحصائيات الفترة من {{ $startDate->format('d/m/Y') }} إلى {{ $endDate->format('d/m/Y') }}
+    </p>
+    <p class="text-white/60 text-sm">
+      شهر {{ $attendanceStats['period']['month'] }} {{ $attendanceStats['period']['year'] }}
     </p>
   </div>
 
@@ -81,7 +84,7 @@
       </div>
       <div class="stat-value">{{ $attendanceStats['present_days'] }}</div>
       <div class="stat-label">أيام الحضور</div>
-      <div class="stat-sublabel">من أصل {{ $attendanceStats['total_work_days'] }} يوم</div>
+      <div class="stat-sublabel">من أصل {{ $attendanceStats['total_work_days'] }} يوم عمل</div>
     </div>
 
     <div class="stat-card">

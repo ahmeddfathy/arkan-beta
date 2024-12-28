@@ -32,14 +32,15 @@ class DashboardController extends Controller
             'max_delay_minutes' => 0
         ];
 
-        // إحصائيات الشهر للجميع (موظف أو مدير)
-        $startDate = now()->startOfMonth();
-        $endDate = now()->endOfMonth();
+        // تحديد بداية ونهاية الشهر (من 26 للشهر السابق إلى 25 للشهر الحالي)
+        $now = now();
+        $startDate = $now->copy()->subMonth()->setDay(26)->startOfDay();
+        $endDate = $now->copy()->setDay(25)->endOfDay();
 
         // Add period information
         $attendanceStats['period'] = [
-            'month' => now()->translatedFormat('F'),
-            'year' => now()->year
+            'month' => $now->translatedFormat('F'),
+            'year' => $now->year
         ];
 
         // Get salary files for the user
@@ -117,7 +118,7 @@ class DashboardController extends Controller
         }
 
         // في حالة الموظف العادي
-        return view('profile.dashboard-user', compact('attendanceStats', 'salaryFiles'));
+        return view('profile.dashboard-user', compact('attendanceStats', 'salaryFiles', 'startDate', 'endDate'));
     }
 
     public function previewAttendance($employee_id, AttendanceReportService $reportService)
@@ -130,29 +131,62 @@ class DashboardController extends Controller
             'late_days' => 0,
             'total_delay_minutes' => 0,
             'avg_delay_minutes' => 0,
-            'max_delay_minutes' => 0
+            'max_delay_minutes' => 0,
+            'total_work_days' => 0,
+            'period' => []
         ];
 
-        // تحديد الشهر والسنة من الطلب أو استخدام القيم الافتراضية
-        $month = is_numeric(request('month')) ? (int)request('month') : now()->month;
-        $year = is_numeric(request('year')) ? (int)request('year') : now()->year;
-        $status = request('status');
+        $now = now();
+        $recordsQuery = AttendanceRecord::where('employee_id', $employee_id);
 
-        // حساب الإحصائيات للموظف
-        $statsQuery = AttendanceRecord::where('employee_id', $employee_id);
+        // تحديد الفترة حسب الفلتر
+        if (request('start_date') && request('end_date')) {
+            $startDate = Carbon::parse(request('start_date'))->startOfDay();
+            $endDate = Carbon::parse(request('end_date'))->endOfDay();
+            $recordsQuery->whereBetween('attendance_date', [$startDate, $endDate]);
 
-        // تطبيق الفلترة حسب الشهر والسنة
-        if ($month) {
-            $statsQuery->whereMonth('attendance_date', $month);
-        }
-        if ($year) {
-            $statsQuery->whereYear('attendance_date', $year);
+            $attendanceStats['period'] = [
+                'month' => $startDate->translatedFormat('F'),
+                'year' => $startDate->year
+            ];
+        } elseif (request('month')) {
+            $year = request('year') ?: $now->year;
+            $startDate = Carbon::create($year, request('month'), 1)->startOfMonth();
+            $endDate = $startDate->copy()->endOfMonth();
+            $recordsQuery->whereMonth('attendance_date', request('month'))
+                ->whereYear('attendance_date', $year);
+
+            $attendanceStats['period'] = [
+                'month' => $startDate->translatedFormat('F'),
+                'year' => $year
+            ];
+        } elseif (request('year')) {
+            $startDate = Carbon::create(request('year'), 1, 1)->startOfYear();
+            $endDate = $startDate->copy()->endOfYear();
+            $recordsQuery->whereYear('attendance_date', request('year'));
+
+            $attendanceStats['period'] = [
+                'month' => $startDate->translatedFormat('F'),
+                'year' => request('year')
+            ];
+        } else {
+            $startDate = $now->copy()->subMonth()->setDay(26)->startOfDay();
+            $endDate = $now->copy()->setDay(25)->endOfDay();
+            $recordsQuery->whereBetween('attendance_date', [$startDate, $endDate]);
+
+            $attendanceStats['period'] = [
+                'month' => $startDate->translatedFormat('F'),
+                'year' => $startDate->year
+            ];
         }
 
         // تطبيق فلتر الحالة
-        if ($status) {
-            $statsQuery->where('status', $status);
+        if (request('status')) {
+            $recordsQuery->where('status', request('status'));
         }
+
+        // جساب الإحصائيات
+        $statsQuery = clone $recordsQuery;
 
         // حساب أجمالي أيام العمل (فقط أيام الحضور والغياب)
         $totalWorkDays = (clone $statsQuery)
@@ -168,7 +202,7 @@ class DashboardController extends Controller
             ->whereNotNull('entry_time')
             ->count();
 
-        // حضافة إجمالي أيام العمل للإحصائيات
+        // إضافة إجمالي أيام العمل للإحصائيات
         $attendanceStats['total_work_days'] = $totalWorkDays;
 
         // حساب أيام الغياب
@@ -194,12 +228,50 @@ class DashboardController extends Controller
             : 0;
         $attendanceStats['max_delay_minutes'] = $lateRecords->max('delay_minutes') ?? 0;
 
-        // إضافة معلومات الفترة الزمنية
-        $attendanceStats['period'] = [
-            'month' => $month ? Carbon::create()->month($month)->translatedFormat('F') : 'كل الشهور',
-            'year' => $year ?: 'ل السنوات'
-        ];
+        // إحصائيات آخر 3 شهور
+        $threeMonthsStats = [];
+        $currentDate = now();
 
-        return $reportService->previewAttendance($employee_id, $attendanceStats);
+        for ($i = 0; $i < 3; $i++) {
+            $monthDate = $currentDate->copy()->subMonths($i);
+            $monthStart = $monthDate->copy()->startOfMonth();
+            $monthEnd = $monthDate->copy()->endOfMonth();
+
+            $monthQuery = AttendanceRecord::where('employee_id', $employee_id)
+                ->whereBetween('attendance_date', [$monthStart, $monthEnd]);
+
+            if (request('status')) {
+                $monthQuery->where('status', request('status'));
+            }
+
+            // حساب أيام الحضور والغياب فقط
+            $workingDaysQuery = clone $monthQuery;
+            $totalWorkDays = $workingDaysQuery->where(function ($query) {
+                $query->where('status', 'حضـور')
+                    ->orWhere('status', 'غيــاب');
+            })->count();
+
+            $threeMonthsStats[] = [
+                'month' => $monthDate->translatedFormat('F'),
+                'year' => $monthDate->year,
+                'total_days' => $totalWorkDays,  // تغيير هنا - فقط أيام الحضور والغياب
+                'present_days' => (clone $monthQuery)->where('status', 'حضـور')->count(),
+                'absent_days' => (clone $monthQuery)->where('status', 'غيــاب')->count()
+            ];
+        }
+
+        // جلب السجلات مع الترقيم وحفظ الفلاتر في الروابط
+        $attendanceRecords = $recordsQuery->orderBy('attendance_date', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        return $reportService->previewAttendance(
+            $employee_id,
+            $attendanceStats,
+            $startDate,
+            $endDate,
+            $threeMonthsStats,
+            $attendanceRecords
+        );
     }
 }

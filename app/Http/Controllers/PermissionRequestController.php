@@ -151,42 +151,39 @@ class PermissionRequestController extends Controller
 
 
     public function updateStatus(Request $request, PermissionRequest $permissionRequest)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    if ($user->role !== 'manager') {
-        return redirect()->route('welcome')->with('error', 'Unauthorized action.');
+        if ($user->role !== 'manager') {
+            return redirect()->route('welcome')->with('error', 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'status' => 'required|in:approved,rejected',
+            'rejection_reason' => 'required_if:status,rejected|nullable|string|max:255',
+        ]);
+
+        $this->permissionRequestService->updateStatus($permissionRequest, $validated);
+
+        return redirect()->route('permission-requests.index')
+            ->with('success', 'Request status updated successfully.');
     }
 
-    $validated = $request->validate([
-        'status' => 'required|in:approved,rejected',
-        'rejection_reason' => 'required_if:status,rejected|nullable|string|max:255',
-    ]);
+    public function updateReturnStatus(Request $request, PermissionRequest $permissionRequest)
+    {
+        $user = Auth::user();
 
-    $this->permissionRequestService->updateStatus($permissionRequest, $validated);
+        if ($user->role !== 'manager') {
+            return redirect()->route('welcome')->with('error', 'Unauthorized action.');
+        }
 
-    return redirect()->route('permission-requests.index')
-        ->with('success', 'Request status updated successfully.');
-}
+        $validated = $request->validate([
+            'return_status' => 'required|in:0,1,2',
+        ]);
 
-public function updateReturnStatus(Request $request, PermissionRequest $permissionRequest)
-{
-    $user = Auth::user();
+        $this->permissionRequestService->updateReturnStatus($permissionRequest, (int)$validated['return_status']);
 
-    if ($user->role !== 'manager') {
-        return redirect()->route('welcome')->with('error', 'Unauthorized action.');
+        return redirect()->route('permission-requests.index')
+            ->with('success', 'Return status updated successfully.');
     }
-
-    $validated = $request->validate([
-        'return_status' => 'required|in:0,1,2',
-    ]);
-
-    $this->permissionRequestService->updateReturnStatus($permissionRequest, (int)$validated['return_status']);
-
-    return redirect()->route('permission-requests.index')
-        ->with('success', 'Return status updated successfully.');
-}
-
-
-
 }

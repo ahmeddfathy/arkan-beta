@@ -54,7 +54,7 @@
             <div class="chat-header" >
                 <div class="chat-contact-info">
                     <div class="contact-avatar">
-                        <img src="" alt="Contact" id="contact-avatar">
+                        <img src="https://th.bing.com/th/id/OIP.7dl-g74HDQZsmchtLCsMvQHaHa?rs=1&pid=ImgDetMain" alt="Contact" id="contact-avatar">
                     </div>
                     <div class="contact-details">
                         <h4 id="contact-name"></h4>

@@ -24,7 +24,7 @@
 
     </div>
     <!-- @livewire('navigation-menu') -->
-     @include('layouts.navigation')
+    @include('layouts.navigation')
     <div class="wrapper flex-grow-1 d-flex flex-column">
         @if(session('success'))
         <script>

@@ -18,6 +18,8 @@ class PermissionRequest extends Model
         'status',
         'rejection_reason',
         'reason',
+        'leader_rejection_reason',
+        'leader_approval'
 
     ];
 
@@ -49,7 +51,7 @@ class PermissionRequest extends Model
      */
     public function getReturnStatusLabel(): string
     {
-        return match($this->returned_on_time) {
+        return match ($this->returned_on_time) {
             0 => 'Not Specified',
             1 => 'Returned On Time',
             2 => 'Did Not Return On Time',
@@ -74,8 +76,4 @@ class PermissionRequest extends Model
 
         return $totalAllowed - $usedMinutes;
     }
-
-
-
 }
-

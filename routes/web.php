@@ -18,6 +18,7 @@ use App\Mail\ExampleMail;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\OnlineStatusController;
 use App\Http\Controllers\AdminNotificationController;
+use App\Http\Controllers\EmployeeStatisticsController;
 
 Route::get('/send-mail', function () {
     $data = [
@@ -92,8 +93,7 @@ Route::middleware(['auth', 'role:manager'])->group(function () {
     Route::get('/attendance', [AttendanceRecordController::class, 'index'])->name('attendance.index');
     Route::post('/attendance/import', [AttendanceRecordController::class, 'import'])->name('attendance.import');
 
-    Route::resource('users', UserController::class);
-    Route::post('user/import', [UserController::class, 'import'])->name('user.import');;
+
     Route::resource('/attendances', AttendanceController::class);
     Route::resource('/leaves', LeaveController::class);
 
@@ -102,13 +102,15 @@ Route::middleware(['auth', 'role:manager'])->group(function () {
     ]);
 });
 
+Route::resource('users', UserController::class);
+Route::post('user/import', [UserController::class, 'import'])->name('user.import');
 // Shared routes (Manager & Employee)
 Route::middleware(['auth', 'role:manager,employee'])->group(function () {
     // Attendance
     Route::resource('overtime-requests', OverTimeRequestsController::class);
 
     // Leave
-    Route::resource('/absence-requests', AbsenceRequestController::class);
+    Route::get('/absence-requests', [AbsenceRequestController::class, 'index'])->name('absence-requests.index');
 
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
@@ -168,3 +170,44 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/attendance/preview/{employee_id}', [DashboardController::class, 'previewAttendance'])
         ->name('attendance.preview');
 });
+
+// مسارات مشتركة للجميع (موظف، مدير، ليدر)
+Route::middleware(['auth'])->group(function () {
+    // الصفحة الرئيسية لطلبات الغياب - متاحة للجميع
+
+    // عمليات CRUD الأساسية للموظف
+    Route::post('/absence-requests', [AbsenceRequestController::class, 'store'])->name('absence-requests.store');
+    Route::get('/absence-requests/create', [AbsenceRequestController::class, 'create'])->name('absence-requests.create');
+    Route::get('/absence-requests/{absenceRequest}/edit', [AbsenceRequestController::class, 'edit'])->name('absence-requests.edit');
+    Route::put('/absence-requests/{absenceRequest}', [AbsenceRequestController::class, 'update'])->name('absence-requests.update');
+    Route::delete('/absence-requests/{absenceRequest}', [AbsenceRequestController::class, 'destroy'])->name('absence-requests.destroy');
+});
+
+// مسارات مشتركة للمدير والليدر
+Route::middleware(['auth', 'role:manager,leader'])->group(function () {
+    // مسارات خاصة بإدارة الطلبات
+    Route::get('/absence-requests', [AbsenceRequestController::class, 'index'])->name('absence-requests.index');
+
+    Route::patch('/absence-requests/{absenceRequest}/reset-status', [AbsenceRequestController::class, 'resetStatus'])
+        ->name('absence-requests.reset-status');
+    Route::patch('/absence-requests/{id}/modify', [AbsenceRequestController::class, 'modifyResponse'])
+        ->name('absence-requests.modify');
+    Route::post('/absence-requests/{absenceRequest}/status', [AbsenceRequestController::class, 'updateStatus'])
+        ->name('absence-requests.update-status');
+    Route::resource('/absence-requests', AbsenceRequestController::class);
+
+    Route::get('/employee-statistics', [EmployeeStatisticsController::class, 'index'])
+        ->name('employee-statistics.index');
+    Route::get('/employee-statistics/{id}', [EmployeeStatisticsController::class, 'getEmployeeDetails'])
+        ->name('employee-statistics.details');
+});
+
+// مسارات خاصة بالمدير فقط
+Route::middleware(['auth', 'role:manager'])->group(function () {
+    Route::post('/attendance/import', [AttendanceRecordController::class, 'import'])->name('attendance.import');
+    // ... باقي المسارات الخاصة بالمدير
+});
+
+Route::get('/import-users', function () {
+    return view('users.import');
+})->name('users.import');

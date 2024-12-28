@@ -105,7 +105,7 @@ document
     .querySelectorAll('input[type="date"], input[type="datetime-local"]')
     .forEach((input) => {
         const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setDate(tomorrow.getDate());
         input.min = tomorrow.toISOString().split("T")[0];
     });
 

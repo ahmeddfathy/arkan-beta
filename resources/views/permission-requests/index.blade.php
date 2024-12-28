@@ -3,7 +3,7 @@
 @section('content')
 <link href="{{ asset('css/permission-managment.css') }}" rel="stylesheet">
 <div class="container-fluid py-4">
-    
+
 
     @if(Auth::user()->role === 'manager')
     <div class="card-body ">
